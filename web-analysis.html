@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Analysis AI Terminal</title>
+  <link rel="stylesheet" href="cybersec-ai.css">
+</head>
+
+<body>
+  <div class="wrapper">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">NAVIGATION</div>
+      </div>
+      <ul class="nav-items">
+        <li class="nav-item">
+          <span class="nav-icon">⌂</span>
+          <a href="cybersec-ai.html" class="nav-text">Terminal</a>
+        </li>
+        <li class="nav-item">
+          <span class="nav-icon">⚔</span>
+          <a href="redteam.html" class="nav-text">RedTeam</a>
+        </li>
+        <li class="nav-item">
+          <span class="nav-icon">🛡</span>
+          <a href="blueteam.html" class="nav-text">BlueTeam</a>
+        </li>
+        <li class="nav-item active">
+          <span class="nav-icon">🌐</span>
+          <a href="web-analysis.html" class="nav-text">Web Analysis</a>
+        </li>
+        <li class="nav-item">
+          <span class="nav-icon">☣</span>
+          <a href="malware-analysis.html" class="nav-text">Malware Chat</a>
+        </li>
+        <li class="nav-item">
+          <span class="nav-icon">📁</span>
+          <a href="malware-upload.html" class="nav-text">File Analysis</a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Content Area -->
+    <main class="content-area">
+      <!-- API Key bar -->
+      <div class="api-bar">
+        <label>API KEY</label>
+        <input type="password" id="api-key" placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false" />
+        <button class="api-save" onclick="saveKey()">Save</button>
+
+        <select id="model-select">
+          <option value="claude-opus-4-20250514">Opus 4 (latest)</option>
+          <option value="claude-opus-4-5-20251101">Opus 4.5</option>
+          <option value="claude-3-opus-20240229">Opus 3</option>
+          <option value="claude-sonnet-4-20250514">Sonnet 4</option>
+          <option value="claude-haiku-4-5-20251001">Haiku 4.5</option>
+        </select>
+      </div>
+
+      <div class="terminal-root">
+        <div class="term-titlebar">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+          <div class="term-title">web-analysis — bash</div>
+          <div class="badge" id="status-badge">○ NO KEY</div>
+        </div>
+
+        <div class="quick-chips">
+          <div class="chip" onclick="ask('Explain the OWASP Top 10 vulnerabilities')">OWASP Top 10</div>
+          <div class="chip" onclick="ask('How do I test for SQL injection vulnerabilities?')">SQL injection</div>
+          <div class="chip" onclick="ask('What are common XSS vulnerabilities and how do I test for them?')">XSS testing</div>
+          <div class="chip" onclick="ask('How do I use Burp Suite for web application testing?')">Burp Suite</div>
+          <div class="chip" onclick="ask('Explain API security testing methodologies')">API security</div>
+          <div class="chip" onclick="ask('How do I use wfuzz for web fuzzing?')">wfuzz usage</div>
+        </div>
+
+        <div class="output-area" id="output">
+          <pre class="ascii-logo">
+ 🌐 WEB ANALYSIS 🌐
+</pre>
+          <div class="welcome-msg">
+            <span style="color:#79c0ff">Web Analysis AI v1.0</span> — Web application security specialist
+            <hr class="divider">
+            Specializes in OWASP Top 10, web application penetration testing, API security,
+            Burp Suite, wfuzz, and web vulnerability assessment.
+            <hr class="divider">
+            <span style="color:#e3b341">▶ Configure your API key above to begin.</span>
+          </div>
+        </div>
+
+        <div class="input-row">
+          <div class="prompt-sym">❯</div>
+          <input type="text" id="user-input" placeholder="Ask about web security, OWASP, API testing..."
+            autocomplete="off" spellcheck="false" />
+          <button class="send-btn" id="send-btn" onclick="sendMsg()">RUN</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="web-analysis.js"></script>
+</body>
+
+</html>
