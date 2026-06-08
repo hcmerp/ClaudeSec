@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { Sidebar } from './components/Sidebar';
@@ -8,7 +7,6 @@ import { RedTeam } from './pages/RedTeam';
 import { BlueTeam } from './pages/BlueTeam';
 import { WebAnalysis } from './pages/WebAnalysis';
 import { MalwareAnalysis } from './pages/MalwareAnalysis';
-import { FileAnalysis } from './pages/FileAnalysis';
 
 function App() {
   return (
@@ -24,7 +22,6 @@ function App() {
               <Route path="/blueteam" element={<BlueTeam />} />
               <Route path="/web-analysis" element={<WebAnalysis />} />
               <Route path="/malware-analysis" element={<MalwareAnalysis />} />
-              <Route path="/file-analysis" element={<FileAnalysis />} />
             </Routes>
           </main>
         </div>

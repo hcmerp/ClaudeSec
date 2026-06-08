@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { SYSTEM_PROMPTS, QUICK_CHIPS } from '../utils/systemPrompts';
 import { sendMessageToAnthropic } from '../utils/api';
 import { generateId, getCurrentTimestamp, formatMarkdown } from '../utils/format';
-import { Message } from '../types';
+import type { Message } from '../types';
 import { StatusBar } from './StatusBar';
 import { QuickChips } from './QuickChips';
 
@@ -11,18 +11,25 @@ interface ChatInterfaceProps {
   moduleId: string;
   title: string;
   logo?: React.ReactNode;
+  systemPromptOverride?: string;
+  quickChipsOverride?: string[];
 }
 
-export const ChatInterface: React.FC<ChatInterfaceProps> = ({ moduleId, title, logo }) => {
+export const ChatInterface: React.FC<ChatInterfaceProps> = ({ moduleId, title, logo, systemPromptOverride, quickChipsOverride }) => {
   const { apiKeyState, chatStates, updateChatState, addMessage } = useApp();
   const [inputValue, setInputValue] = React.useState('');
   const [streamingContent, setStreamingContent] = React.useState('');
   const outputRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const currentState = chatStates[moduleId] || { messages: [], isLoading: false, error: null };
-  const systemPrompt = SYSTEM_PROMPTS[moduleId] || SYSTEM_PROMPTS.terminal;
-  const quickPrompts = QUICK_CHIPS[moduleId] || QUICK_CHIPS.terminal;
+
+  // Use override if provided, otherwise fall back to default lookup
+  const systemPrompt = systemPromptOverride
+    ? (SYSTEM_PROMPTS[systemPromptOverride] || SYSTEM_PROMPTS[moduleId] || SYSTEM_PROMPTS.terminal)
+    : (SYSTEM_PROMPTS[moduleId] || SYSTEM_PROMPTS.terminal);
+  const quickPrompts = quickChipsOverride || QUICK_CHIPS[moduleId] || QUICK_CHIPS.terminal;
 
   useEffect(() => {
     if (outputRef.current) {
@@ -38,6 +45,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ moduleId, title, l
 
     setInputValue('');
     updateChatState(moduleId, { isLoading: true, error: null });
+
+    // Create abort controller for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     const userMessage: Message = {
       id: generateId(),
@@ -56,7 +67,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ moduleId, title, l
         systemPrompt,
         (chunk) => {
           setStreamingContent(prev => prev + chunk);
-        }
+        },
+        abortController.signal
       );
 
       const assistantMessage: Message = {
@@ -68,11 +80,34 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ moduleId, title, l
       addMessage(moduleId, assistantMessage);
       setStreamingContent('');
     } catch (error) {
+      // Check if it was aborted
+      if (error instanceof Error && error.name === 'AbortError') {
+        // Add partial streaming content as a message if there is any
+        if (streamingContent) {
+          const partialMessage: Message = {
+            id: generateId(),
+            role: 'assistant',
+            content: streamingContent + '\n\n[Response interrupted by user]',
+            timestamp: getCurrentTimestamp(),
+          };
+          addMessage(moduleId, partialMessage);
+          setStreamingContent('');
+        }
+        return;
+      }
       updateChatState(moduleId, {
         error: error instanceof Error ? error.message : 'Unknown error occurred',
       });
     } finally {
+      abortControllerRef.current = null;
       updateChatState(moduleId, { isLoading: false });
+    }
+  };
+
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
     }
   };
 
@@ -159,6 +194,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ moduleId, title, l
             disabled={currentState.isLoading || !apiKeyState.isReady}
             className="chat-input"
           />
+          <button
+            onClick={currentState.isLoading ? handleStop : () => handleSubmit()}
+            disabled={!currentState.isLoading && (!inputValue.trim() || !apiKeyState.isReady)}
+            className={`submit-btn ${currentState.isLoading ? 'stop-btn' : 'send-btn'}`}
+            title={currentState.isLoading ? 'Stop generation' : 'Send message'}
+          >
+            {currentState.isLoading ? '■' : '→'}
+          </button>
         </div>
       </div>
     </div>

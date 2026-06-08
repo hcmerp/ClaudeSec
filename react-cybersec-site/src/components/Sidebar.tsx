@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { NavigationItem } from '../types';
+import type { NavigationItem } from '../types';
 
 const NAV_ITEMS: NavigationItem[] = [
   { id: 'terminal', label: 'Terminal', icon: '⌂', path: '/' },

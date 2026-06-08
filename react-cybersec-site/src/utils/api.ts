@@ -1,4 +1,4 @@
-import { Message } from '../types';
+import type { Message } from '../types';
 
 export interface ApiResponse {
   content: string;
@@ -14,7 +14,8 @@ export async function sendMessageToAnthropic(
   apiKey: string,
   model: string,
   systemPrompt: string,
-  onStream?: (chunk: string) => void
+  onStream?: (chunk: string) => void,
+  signal?: AbortSignal
 ): Promise<ApiResponse> {
   const apiMessages = messages
     .filter(m => m.role !== 'system')
@@ -24,13 +25,29 @@ export async function sendMessageToAnthropic(
     }));
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    console.log('[API] Sending request to Anthropic API');
+    console.log('[API] API Key present:', !!apiKey);
+    console.log('[API] API Key format:', apiKey?.substring(0, 10) + '...');
+    console.log('[API] Model:', model);
+    console.log('[API] Number of messages:', apiMessages.length);
+
+    const requestBody = {
+      model,
+      max_tokens: 4096,
+      system: systemPrompt,
+      messages: apiMessages,
+      stream: !!onStream,
+    };
+    console.log('[API] Request body:', JSON.stringify(requestBody, null, 2));
+
+    const response = await fetch('/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
+      signal,
       body: JSON.stringify({
         model,
         max_tokens: 4096,
@@ -42,6 +59,11 @@ export async function sendMessageToAnthropic(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error('[API] Error response:', errorData);
+      console.error('[API] Status:', response.status);
+      console.error('[API] StatusText:', response.statusText);
+      console.error('[API] Error message:', errorData.error?.message);
+      console.error('[API] Error type:', errorData.error?.type);
       throw new Error(
         errorData.error?.message || `API error: ${response.status} ${response.statusText}`
       );

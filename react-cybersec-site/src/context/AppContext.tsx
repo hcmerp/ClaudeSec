@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { ApiKeyState, ChatState, Message } from '../types';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import type { ApiKeyState, ChatState, Message } from '../types';
 
 interface AppContextType {
   apiKeyState: ApiKeyState;
@@ -17,7 +18,7 @@ const STORAGE_KEY = 'cybersec_api_key';
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [apiKeyState, setApiKeyState] = useState<ApiKeyState>({
     apiKey: '',
-    model: 'claude-opus-4-20250514',
+    model: 'claude-sonnet-4-20250514',
     isReady: false,
   });
 
@@ -53,20 +54,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateChatState = (module: string, updates: Partial<ChatState>) => {
-    setChatStates(prev => ({
-      ...prev,
-      [module]: { ...prev[module], ...updates },
-    }));
+    setChatStates(prev => {
+      const currentState = prev[module] || { messages: [], isLoading: false, error: null };
+      return {
+        ...prev,
+        [module]: { ...currentState, ...updates },
+      };
+    });
   };
 
   const addMessage = (module: string, message: Message) => {
-    setChatStates(prev => ({
-      ...prev,
-      [module]: {
-        ...prev[module],
-        messages: [...prev[module].messages, message],
-      },
-    }));
+    setChatStates(prev => {
+      const currentState = prev[module] || { messages: [], isLoading: false, error: null };
+      return {
+        ...prev,
+        [module]: {
+          ...currentState,
+          messages: [...currentState.messages, message],
+        },
+      };
+    });
   };
 
   return (

@@ -1,4 +1,5 @@
 export function formatMarkdown(text: string): string {
+  let codeBlockCount = 0;
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -11,8 +12,9 @@ export function formatMarkdown(text: string): string {
     .replace(/\b(Medium|MEDIUM)\b/g, '<span class="severity-medium">$1</span>')
     .replace(/\b(Low|LOW|Informational|INFO)\b/g, '<span class="severity-low">$1</span>')
     .replace(/\b(CVE-\d{4}-\d+)\b/g, '<span class="cve-link">$1</span>')
-    .replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-      return `<pre><code class="code-block">${code}</code></pre>`;
+    .replace(/```(\w*)\n([\s\S]*?)```/g, (_, _lang, code) => {
+      const codeId = `code-${++codeBlockCount}`;
+      return `<pre class="code-block-wrapper"><div class="code-header"><span class="code-lang">${_lang || 'code'}</span><button class="copy-btn" onclick="copyCode('${codeId}')" title="Copy code">📋 Copy</button></div><code class="code-block" id="${codeId}">${code}</code></pre>`;
     })
     .replace(/\n/g, '<br />');
 }
