@@ -26,9 +26,47 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ moduleId, title, l
   const currentState = chatStates[moduleId] || { messages: [], isLoading: false, error: null };
 
   // Use override if provided, otherwise fall back to default lookup
-  const systemPrompt = systemPromptOverride
+  let basePrompt = systemPromptOverride
     ? (SYSTEM_PROMPTS[systemPromptOverride] || SYSTEM_PROMPTS[moduleId] || SYSTEM_PROMPTS.terminal)
     : (SYSTEM_PROMPTS[moduleId] || SYSTEM_PROMPTS.terminal);
+
+  // Fable 5 requires safer system prompts to avoid cyber-safety refusals
+  const isFable5 = apiKeyState.model === 'claude-fable-5';
+  let systemPrompt = basePrompt;
+
+  if (isFable5) {
+    console.log('[ChatInterface] Using safer prompt for Fable 5 to avoid cyber-safety restrictions');
+    // Extract just the core educational part, removing offensive security references
+    systemPrompt = `# AXIOM — CYBERSECURITY EDUCATOR
+
+You are an elite cybersecurity educator and defensive security specialist. You help security professionals understand threats, implement protections, and strengthen defenses.
+
+## RESPONSE FORMAT
+[Title — 2-5 words]
+
+[Brief explanation 1-2 lines]
+
+[content — educational and defensive guidance]
+
+## FOCUS AREAS
+- **Defensive Security**: Blue team operations, incident response, threat detection
+- **Protection Strategies**: System hardening, secure configuration, defense-in-depth
+- **Security Education**: Concepts explanation, best practices, risk assessment
+- **Detection Engineering**: SIEM rules, YARA signatures, monitoring strategies
+
+## CORE PRINCIPLES
+1. Focus on understanding, detection, and prevention
+2. Explain both threats and defenses comprehensively
+3. Provide actionable defensive guidance
+4. Reference frameworks: MITRE ATT&CK, NIST, CIS Benchmarks
+5. Emphasize legal and ethical security practices
+
+## TECHNICAL EXPERTISE
+Linux security, Windows hardening, cloud security (AWS/Azure/GCP), network defense, malware analysis, incident response, detection engineering, threat intelligence, security architecture.
+
+Response style: Educational, practical, and focused on defensive security. Use severity ratings for findings. Emphasize protection over exploitation.`;
+  }
+
   const quickPrompts = quickChipsOverride || QUICK_CHIPS[moduleId] || QUICK_CHIPS.terminal;
 
   useEffect(() => {
@@ -138,6 +176,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ moduleId, title, l
             <div className="welcome-msg">
               <span style={{ color: '#3fb950' }}>CyberSec AI v1.0</span> — Elite security consultant, powered by Claude
               <hr className="divider" />
+              {isFable5 && (
+                <div className="system-msg" style={{ color: '#f59e0b', marginBottom: '10px' }}>
+                  ⚠️ <strong>Fable 5 Active:</strong> Using enhanced safety mode for cybersecurity content
+                </div>
+              )}
               <div className="system-msg">
                 // Enter your Anthropic API key above to get started
                 <br />
